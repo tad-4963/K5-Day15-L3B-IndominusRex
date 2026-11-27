@@ -1,8 +1,8 @@
-# IndominusRex — Trợ lý đối chiếu lịch, phòng và soạn thông báo buổi lab (Track A · A5)
+# IndominusRex — Pre-Class Bottleneck Brief: Bản đồ điểm nghẽn lớp học trước buổi dạy (Track A · A1 mở rộng)
 
 **Thành viên, lớp, track:** xem [TEAMS.md](TEAMS.md).
 
-*Lát cắt:* Một key coach · vào tối trước buổi lab khi phòng vừa được cập nhật · AI đối chiếu lịch giảng dạy với lịch lab coach, phát hiện sai lệch/chưa chốt phòng bằng công cụ và quyết định soạn bản thông báo phân phòng theo từng nhóm hay cảnh báo thiếu thông tin · key coach duyệt và gửi thông báo chính xác mà không sợ báo nhầm phòng.
+*Lát cắt:* Một giảng viên hoặc lab coach · chuẩn bị trước buổi học Day X · công cụ code tổng hợp tỷ lệ sai KC, mini lab bị bỏ qua và video bị hỏi nhiều từ log pre-class để AI quyết định xếp hạng Top 3 điểm nghẽn (kèm mức tin cậy) và đề xuất 1 hoạt động gỡ vướng 5–10 phút · giảng viên duyệt và đưa đúng trọng tâm vào đầu buổi học.
 
 ---
 

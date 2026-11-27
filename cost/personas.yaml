@@ -1,6 +1,5 @@
-# Mô phỏng chi phí khi dùng thật — Nhóm IndominusRex (Track A - Pre-Class Bottleneck Brief)
-# Người phụ trách: Hoàng Thế Phong (2A202603832) — Cặp 2.
-# Mọi số đều có nguồn từ phỏng vấn P1, P2, P3 và quy mô thật của khoá học AI20K.
+# Mô phỏng chi phí khi dùng thật — Nhóm IndominusRex (Track A · Pre-Class Bottleneck Brief)
+# Giá model đối chiếu trực tiếp bảng giá chuẩn BTC (further-reading/model-prices.md, xem 25/11/2026).
 
 sessions: 50        # số phiên mô phỏng — bản nộp ≥50
 seed: 42            # giữ cố định để chạy lại ra cùng chuỗi phiên
@@ -9,46 +8,46 @@ users:              # số người dùng thật nếu đưa vào dùng (Giảng
   low: 40
   base: 84
   high: 120
-  source: "Quy mô thực tế: ~14 lớp AI20K (L1-L3), mỗi lớp gồm 1-2 Giảng viên và 4-5 Lab Coach, tổng cộng ~84 nhân sự giảng dạy (cơ sở); thấp: 40 người (tính riêng khối phòng lab); cao: 120 người (mở rộng trợ giảng và các khoá tiếp theo)"
+  source: "Cơ sở 84 người: 22 giảng viên + 62 lab coach (nguồn: bối cảnh data/training-ops/README.md khoá AI20K); thấp 40 người (tự ước tính — chỉ tính nhóm trực lab chính); cao 120 người (tự ước tính — mở rộng thêm trợ giảng/khoá tiếp theo)"
 
 personas:           # ≥3 kiểu người dùng; share cộng lại = 1.0
   - name: giang_vien_chinh
-    share: 0.25             # 25% là giảng viên đứng lớp chính
-    uses_per_month: 4      # 1 buổi lý thuyết trọng tâm / tuần x 4 tuần
-    turns_per_session: 1   # 1 lượt tra cứu tóm tắt điểm nghẽn trước buổi dạy
+    share: 0.25             # 25% (~21/84, khớp tỷ lệ 22 giảng viên / 84 nhân sự)
+    uses_per_month: 4       # 1 buổi lý thuyết trọng tâm / tuần × 4 tuần
+    turns_per_session: 1    # 1 lượt tra cứu tóm tắt điểm nghẽn trước buổi dạy
     types: [thuong, kho]
-    source: "Phỏng vấn P2 (Giảng viên chính) — tra cứu trước buổi lý thuyết hàng tuần"
+    source: "(tự ước tính) dựa trên lịch học GĐ1 và vai trò giảng viên chính"
 
   - name: lab_coach_truc_lop
-    share: 0.55             # 55% là các Lab Coach phụ trách phòng thực hành
-    uses_per_month: 8      # 2 buổi thực hành lab / tuần x 4 tuần
-    turns_per_session: 1   # 1 lượt tra cứu mini lab và bài tập bị bỏ dở
+    share: 0.55             # 55% (~46/84) là Lab Coach trực phòng thực hành
+    uses_per_month: 8       # 2 buổi thực hành lab / tuần × 4 tuần
+    turns_per_session: 1    # 1 lượt tra cứu mini lab và KC bị vướng trước ca lab
     types: [thuong, kho]
-    source: "Phỏng vấn P1, P3 (Lab Coach) — tra cứu trước 2 ca trực lab hàng tuần"
+    source: "(tự ước tính) dựa trên lịch trực lab 2 buổi/tuần của lab coach"
 
   - name: key_coach_lead
-    share: 0.20             # 20% là Key Coach điều phối & Ban đào tạo
-    uses_per_month: 15     # 3-4 buổi / tuần rà soát tổng hợp nhiều lớp
-    turns_per_session: 2   # tra cứu và so sánh độ lệch giữa các ngày học
+    share: 0.20             # 20% (~17/84) là Key Coach / Day Lead điều phối
+    uses_per_month: 15      # 3–4 buổi / tuần rà soát tổng hợp và so sánh giữa các ngày
+    turns_per_session: 2    # tra cứu + so sánh 2 ngày hoặc hỏi sâu theo focus lab/KC
     types: [thuong, kho, tu_choi]
-    source: "Phỏng vấn P1 (Key Coach điều phối ca lab và rà soát nhiều lớp)"
+    source: "(tự ước tính) dựa trên vai trò Key Coach / Day Lead điều phối nhiều lớp"
 
-prices:             # USD / 1 triệu token (theo further-reading/model-prices.md & bảng giá chính thức 25/11/2026)
+prices:             # USD / 1 triệu token (đúng bảng giá chuẩn BTC: further-reading/model-prices.md, xem 25/11/2026)
   - model: gpt-4o-mini
     input: 0.15
     output: 0.60
-    source: "https://openai.com/api/pricing/ · xem 25/11/2026"
+    source: "https://developers.openai.com/api/docs/pricing · xem 25/11/2026 (bảng giá BTC)"
 
-  - model: gpt-4o
-    input: 2.50
+  - model: gpt-6.2-sol
+    input: 2.00
     output: 10.00
-    source: "https://openai.com/api/pricing/ · xem 25/11/2026"
+    source: "https://developers.openai.com/api/docs/pricing · xem 25/11/2026 (bảng giá BTC)"
 
   - model: gemini-3.1-flash-lite
     input: 0.25
     output: 1.50
-    source: "https://ai.google.dev/gemini-api/docs/pricing · xem 25/11/2026"
+    source: "https://ai.google.dev/gemini-api/docs/pricing · xem 25/11/2026 (bảng giá BTC)"
 
 usd_to_vnd:
   rate: 25400
-  source: "Tỷ giá Vietcombank ngày 25/11/2026"
+  source: "Tỷ giá tham khảo (tự ghi theo quy ước bảng giá BTC)"

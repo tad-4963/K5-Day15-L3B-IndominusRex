@@ -69,4 +69,4 @@ Tái lập bằng lệnh: `python scripts/mine_evidence.py`
 
 - **Chỉ ghi nhận hành vi, không có nội dung chữ chat:** Log đã được BTC ẩn danh, không lưu văn bản câu hỏi hay câu trả lời tự do của học viên (chỉ có độ dài ký tự và số lượt hỏi theo video). Do đó nguyên nhân sâu xa (không hiểu bài vs thiếu thời gian vs lỗi kỹ thuật) chỉ là giả thuyết để Giảng viên/Lab Coach kiểm chứng đầu giờ.
 - **Khác biệt định nghĩa mẫu số:** Mẫu số KC tính theo lượt trả lời hợp lệ lần đầu (`video_quiz`, `pre_post_post`); mẫu số Mini Lab tính theo số học viên distinct mở từng `lab_key` (khác với tổng `active_learners` trong ngày).
-- **Kiểm chứng chéo (Nguồn 2):** Số liệu này đang được kiểm chứng chéo bằng phỏng vấn thực tế **≥3 Giảng viên / Lab Coach** (lưu log tại `evidence/interviews/P1.md`–`P3.md` và tổng hợp tại `evidence/summary.md` trước CP3).
+- **Trạng thái nguồn bổ trợ:** Tại mốc CP3, nhóm tạm dùng Nguồn 1 (`data/preclass/`) làm nguồn bằng chứng đạt ngưỡng chính và không đưa log phỏng vấn chưa xác thực vào repo (chi tiết: `evidence/summary.md`).

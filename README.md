@@ -81,14 +81,14 @@ Nhóm dùng stack khác (Node, Streamlit, notebook…): sửa hàm `run_app()` t
 
 | Thành phần | Thật / Giả | Ghi chú |
 |---|---|---|
-| Lời gọi AI ở quyết định trung tâm | **Thật** (bắt buộc từ CP3) | Model: ____ |
-|  |  |  |
+| Lời gọi AI ở quyết định trung tâm | **Thật** | OpenAI `gpt-4o-mini` qua `codebase/ai.py` (tự ghi trace & token) |
+| Dữ liệu nền (`data/lesson_signals_agg.json`) | **Thật (tổng hợp ẩn danh)** | Tổng hợp từ `data/preclass/*.csv` của BTC bằng `scripts/build_lesson_signals.py`, đã xóa 100% mã học viên `hv` |
+| Công cụ kiểm tra, xếp hạng & guardrails (`codebase/tools.py`) | **Thật** | Chạy hoàn toàn bằng code deterministic (không gửi dữ liệu ra ngoài, không tích hợp vào LMS thật) |
+| Giao diện chạy thử (`codebase/app.py`, `demo.html`) | **Thật (chạy local)** | Hỗ trợ cả CLI và web local qua `python run.py`, không deploy lên hệ thống của khoá |
 
 ## Dùng AI vào việc gì
 
-2–3 dòng (bắt buộc): nhóm dùng công cụ AI nào để làm gì, người kiểm lại phần nào. Chi tiết: [docs/ai-usage.md](docs/ai-usage.md). Coding agent đọc [AGENTS.md](AGENTS.md).
-
-____
+Nhóm dùng trợ lý AI (Antigravity / LLM) để hỗ trợ viết script đào & tổng hợp dữ liệu `data/preclass/`, rà soát khung tài liệu (`spec.md`, `eval/`, `cost/`), hỗ trợ viết code bản chạy thử và gợi ý cải tiến prompt/regex cho Lượt 2. Toàn bộ số liệu đếm, đối chiếu mẫu số, kiểm tra quy tắc ẩn danh, chạy thật và chấm thủ công cột `pass` đều do thành viên nhóm tự kiểm chứng và chịu trách nhiệm (chi tiết: [docs/ai-usage.md](docs/ai-usage.md)).
 
 ## File mẫu — điền ở bước nào
 

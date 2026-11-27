@@ -10,14 +10,14 @@
 
 ## 2. Bộ câu thử dựng ra sao
 
-- `eval/benchmark.csv` *(bản CP2; sẽ mở rộng lên 24–28 câu trước CP3 bổ sung thêm câu từ phỏng vấn Lab Coach/GV)*: **16 câu** (`thuong`: 6 · `kho`: 5 · `tu_choi`: 5, trong đó **2 câu tấn công** `T09`, `T10`).
-- Nguồn (`python run.py check` in sẵn): `nguoi_dung`: 0 *(bổ sung sau phỏng vấn CP2→CP3)* · `data_that`: 10 · `tu_viet`: 6 · `sinh_seed`: 0 → từ người dùng / data thật **10/16 (62,5% ≥ 1/3)**.
+- `eval/benchmark.csv` *(bản CP3 — đã mở rộng đủ chuẩn 20–30 câu)*: **26 câu** (`thuong`: 10 · `kho`: 9 · `tu_choi`: 7, trong đó **3 câu tấn công** `T09`, `T10`, `T25`).
+- Nguồn (`python run.py check` in sẵn): `nguoi_dung`: 0 *(sẽ bổ sung thêm nếu có phỏng vấn)* · `data_that`: 18 · `tu_viet`: 8 · `sinh_seed`: 0 → từ người dùng / data thật **18/26 (69,2% ≥ 1/3)**.
 - Độ phủ — lưới input 4 chiều:
-  1. *Quy mô mẫu:* mẫu đủ lớn (`Day01`, `Day02`, `Day05`, `Day08`) vs mẫu nhỏ/thưa (`Day10`, `Day12`, `Day13`) vs không có dữ liệu (`Day14`).
-  2. *Loại tín hiệu hỏi:* tổng hợp đa tín hiệu · chỉ KC · chỉ mini lab (`skip`/`incomplete`) · video chat (`T02`) · so sánh 2 ngày (`T08`).
+  1. *Quy mô mẫu:* mẫu đủ lớn (`Day01`–`Day05`, `Day07`, `Day08`) vs mẫu nhỏ/cực nhỏ (`Day06`, `Day09`–`Day13`) vs không có dữ liệu (`Day14`).
+  2. *Loại tín hiệu & cách hỏi:* tổng hợp đa tín hiệu · chỉ KC (`T18`) · chỉ mini lab (`T19`) · video chat (`T02`) · so sánh 2 ngày (`T08`, `T24`) · alias tên bài (`AI Product Thinking`) & tiếng Việt (`ngày 7`).
   3. *Độ rõ của câu hỏi:* hỏi cụ thể `Day X` vs mơ hồ thiếu ngày (`T03`).
-  4. *Biên phạm vi & an toàn:* ngoài phạm vi soạn slide (`T05`) · đánh giá GV (`T06`) · đòi xếp hạng/lộ mã học viên `Lxxxx` (`T09`) · prompt injection (`T10`).
-- Câu `kho` & `tu_choi` trỏ về 4 lớp chỗ khó (`spec.md` §5): lớp 1: `T01, T02` · lớp 2: `T03, T04` · lớp 3: `T05, T06, T09, T10` · lớp 4: `T07, T08, T09, T10`.
+  4. *Biên phạm vi & an toàn:* ngoài phạm vi soạn slide (`T05`) · đánh giá GV (`T06`) · tự gửi tin/trừ điểm (`T26`) · đòi xếp hạng/lộ mã học viên `Lxxxx` (`T09`) · prompt injection (`T10`) · đòi lộ system prompt (`T25`).
+- Câu `kho` & `tu_choi` trỏ về 4 lớp chỗ khó (`spec.md` §5): lớp 1: `T01, T02` · lớp 2: `T03, T04, T21, T22, T23` · lớp 3: `T05, T06, T09, T10, T25, T26` · lớp 4: `T07, T08, T09, T10, T21, T24`.
 
 ## 3. Metric và cách chấm
 

@@ -1,79 +1,72 @@
 # Đào data — cách đếm và kết quả
 
-> Người phụ trách: **Hoàng Thế Phong (2A202603832) — Cặp 2**  
-> Dùng cho: Bằng chứng Nguồn 1 chứng minh nỗi đau của Giảng viên & Lab Coach khi không nắm được điểm nghẽn của lớp trước giờ lên lớp.  
-> Script tái lập: `python3 scripts/mine_evidence.py` (chạy độc lập, cho ra kết quả đồng nhất).
+> Dùng cho: Bằng chứng **Nguồn 1** chứng minh điểm nghẽn pre-class phân bố lệch mạnh theo từng bài học (`Day01`–`Day13`) và sụt giảm mẫu số mạnh về cuối khoá.  
+> Script tái lập: `python scripts/mine_evidence.py` (đọc trực tiếp từ `data/lesson_signals_agg.json`, được tổng hợp từ `data/preclass/*.csv` bằng `scripts/build_lesson_signals.py`).
 
 ---
 
 ## 1. Cách đếm — viết TRƯỚC khi chạy
 
-- **Data dùng:** Log tương tác pre-class khoá học AI20K (Cohort V) từ Day01 đến Day13. Bao gồm các sự kiện trả lời câu hỏi trắc nghiệm kiến thức (Knowledge Check - KC) và trạng thái thực hành Mini Lab.
+- **Data dùng:** Bộ dữ liệu hành vi pre-class thật đã ẩn danh do BTC cấp (`data/preclass/`: `answers.csv`, `events.csv`, `chat.csv`, giai đoạn 05/11–25/11/2026, 13 ngày học `Day01`–`Day13`), tổng hợp không chứa mã `hv` tại `data/lesson_signals_agg.json` (chi tiết xử lý: `data/DATA_CARD.md`).
 - **Đếm gì:**
-  1. Số học viên tham gia làm bài pre-class theo từng ngày (`active`).
-  2. Số lượt và tỷ lệ học viên trả lời sai ngay lần đầu ở các câu trắc nghiệm cốt lõi (`kc_errors`).
-  3. Số lượt và tỷ lệ học viên bỏ dở hoặc không hoàn thành bài tập thực hành Mini Lab (`lab_incomplete`).
-- **Mẫu số là gì (N):**
-  - **Mẫu số tổng (Enrolled):** 721 học viên đăng ký khoá học.
-  - **Mẫu số active toàn khoá:** 436 học viên (có phát sinh ít nhất 1 tương tác pre-class từ Day01 đến Day13). Tỷ lệ active toàn khoá: 436/721 (60.5%).
-  - **Mẫu số từng ngày ($N_{day}$):** Số học viên thực sự làm bài pre-class của ngày đó (từ 412 ở Day01 giảm dần xuống 84 ở Day13). *Lưu ý: Không dùng mẫu số cố định 721 cho từng ngày để tránh làm méo mó tỷ lệ sai của những người thực học.*
-- **Script tái lập:** `scripts/mine_evidence.py`
+  1. Số học viên có hoạt động theo từng ngày (`active_learners`).
+  2. Tỷ lệ trả lời sai ở lần thử đầu (`lan_thu = 1`, `was_correct = True/False`, nguồn `video_quiz` và `pre_post_post`) cho từng `kc_code`.
+  3. Tỷ lệ học viên bấm bỏ qua (`skip`) hoặc mở nhưng chưa hoàn thành (`incomplete`) theo từng `lab_key` (mẫu số = số học viên distinct có sự kiện mở/tham gia lab đó).
+- **Mẫu số (N):**
+  - Tổng tài khoản: **721** · Học viên có hoạt động toàn khoá: **436/721 (60,5%)**.
+  - Với từng `kc_code`: mẫu số là tổng lượt trả lời hợp lệ lần đầu của KC đó (chỉ xếp hạng các KC có `n ≥ 5` để tránh nhiễu mẫu quá nhỏ).
+  - Với từng `lab_key`: mẫu số là số học viên distinct đã mở lab đó.
 
 ---
 
 ## 2. Đọc trước, đếm sau
 
-Đã đọc cấu trúc dữ liệu và log 100 dòng đầu của các bảng tương tác. Các *kiểu hành vi* phát hiện được trước khi đếm:
-- **Kiểu 1 (Vấp ở khái niệm trừu tượng):** Ở các bài học lý thuyết thuần túy (như State Machine, ReAct loop, Retrieval Context), học viên hay chọn sai ở câu hỏi phân biệt ranh giới khái niệm trong lần thử đầu tiên.
-- **Kiểu 2 (Bỏ dở Mini Lab khi gặp lỗi môi trường / code phức tạp):** Học viên bắt đầu bài lab nhưng dừng lại ở bước 2 hoặc 3 (chưa ra kết quả cuối), log ghi nhận trạng thái `incomplete` hoặc `abandoned`.
-- **Kiểu 3 (Sụt giảm tương tác - Drop-off):** Càng về các ngày cuối (Day10–Day13), số lượng học viên hoàn thành pre-class trước giờ học giảm mạnh (dưới 150 người), khiến mẫu dữ liệu bị nhỏ (`n < 150`), dễ gây ngộ nhận nếu không có cơ chế cảnh báo độ tin cậy.
+Sau khi đọc từ điển cột (`column_dictionary.csv`, `event_types.csv`) và 30 dòng đầu của từng bảng, phát hiện 3 kiểu hành vi rõ rệt:
+- **Kiểu 1 (Điểm nghẽn tập trung cục bộ vào từng KC lõi):** Tỷ lệ sai chung toàn bộ KC lần đầu chỉ khoảng 20,3%, nhưng một số khái niệm cụ thể bị sai rất nặng (40–85%), không phân bố đều giữa các ngày.
+- **Kiểu 2 (Mini lab bị bỏ qua / bỏ dở cao):** Ở nhiều bài thực hành, 40–58% học viên đã mở lab nhưng bấm `skip` hoặc thoát giữa chừng (`incomplete`).
+- **Kiểu 3 (Sụt giảm tương tác mạnh về các ngày cuối):** Số học viên active giảm từ 417 (Day01) xuống 26 (Day12), khiến các ngày `Day09`–`Day13` không có KC nào đủ `n ≥ 5` → bắt buộc phải gắn cờ cảnh báo mẫu nhỏ (HAX G10).
 
 ---
 
 ## 3. Kết quả khai phá (Data Mining)
 
-Tái lập bằng lệnh: `python3 scripts/mine_evidence.py`
+Tái lập bằng lệnh: `python scripts/mine_evidence.py`
 
-| Ngày | Số học viên làm bài ($N_{day}$) | Số học viên sai KC ($x$) | % Sai KC | Số học viên kẹt Mini Lab ($x$) | % Kẹt Lab | Chủ đề điểm nghẽn chính |
-|---|---|---|---|---|---|---|
-| **Day01** | 412 | 75 | 18.2% | 35 | 8.5% | Cài đặt môi trường & Python cơ bản |
-| **Day02** | 388 | 95 | 24.5% | 54 | 13.9% | Prompt Engineering căn bản |
-| **Day03** | 354 | 112 | 31.6% | 73 | 20.6% | Tool use & function calling |
-| **Day04** | 335 | 100 | 29.9% | 73 | 21.8% | ReAct pattern loop |
-| **Day05** | **312** | **198** | **63.5%** | **184** | **59.0%** | **Agent Loop & State Machine (ĐIỂM NGHẼN NẶNG)** |
-| **Day06** | 289 | 99 | 34.3% | 75 | 26.0% | Data Ingestion & Embedding |
-| **Day07** | **268** | **145** | **54.1%** | **129** | **48.1%** | **Retrieval Context & Vector Search (NGHẼN KC)** |
-| **Day08** | 245 | 95 | 38.8% | 75 | 30.6% | Workflow to Autonomous Agent |
-| **Day09** | **215** | 91 | 42.3% | **112** | **52.1%** | **Evaluation & Failure Analysis (NGHẼN LAB)** |
-| **Day10** | **168** | 78 | 46.4% | **96** | **57.1%** | **PoC to Pilot Gate (MẪU NHỎ, NGHẼN LAB)** |
-| **Day11** | 152 | 62 | 40.8% | 58 | 38.2% | Guardrails & Human-in-the-loop |
-| **Day12** | **142** | **73** | **51.4%** | **89** | **62.7%** | **AI-SDLC & Multi-step Workflow (NGHẼN LAB CAO)** |
-| **Day13** | **84** | **45** | **53.6%** | **55** | **65.5%** | **Launch Economics & Cost (MẪU RẤT NHỎ)** |
+| Ngày | Active | Tổng KC sai lần 1 (`x/N`) | KC khó nhất (`n ≥ 5`) | Mini Lab có tỷ lệ `skip + incomplete` cao nhất |
+|---|---:|---|---|---|
+| **Day01** | 417 | 71/439 (16,2%) | `chatbot_is_app_around_model` (**16/41 = 39,0%**) | `d01-lab-ban-la-llm` (skip 15 + inc 16 / 72 = **43,1%**) |
+| **Day02** | 180 | 43/263 (16,3%) | `select_rule_workflow_agent_level` (8/23 = 34,8%) | `d02-lab-cham-gate` (skip 2 + inc 1 / 4 = 75,0% — *mẫu nhỏ*) |
+| **Day03** | 154 | 52/230 (22,6%) | `agentic_fit_scoring_decision` (**12/20 = 60,0%**) | `d03-lab-can-agentic-fit` (skip 6 + inc 7 / 38 = 34,2%) |
+| **Day04** | 145 | 50/316 (15,8%) | `cot_task_fit` (**11/27 = 40,7%**) | `d04-lab-soi-system-prompt` (skip 3 + inc 0 / 8 = 37,5% — *mẫu nhỏ*) |
+| **Day05** | 134 | 55/180 (30,6%) | `ai_product_canvas` (**12/15 = 80,0%**) | `d05-lab-eval-spec` (skip 1 + inc 4 / 20 = 25,0%) |
+| **Day06** | 103 | 41/93 (44,1%) | `label_agreement_beyond_raw_percent` (**6/7 = 85,7%**) | `d06-lab-tram-gate` (skip 3 + inc 6 / 16 = **56,2%**) |
+| **Day07** | 86 | 26/123 (21,1%) | `tool_definition_context_cost` (**6/10 = 60,0%**) | `d07-lab-ngan-sach-context` (skip 5 + inc 2 / 12 = **58,3%**) |
+| **Day08** | 109 | 20/137 (14,6%) | `multi_agent_token_cost` (**4/10 = 40,0%**) | `d08-lab-crash-test` (skip 8 + inc 3 / 21 = **52,4%**) |
+| **Day09** | 75 | 9/36 (25,0%) | *không có KC n ≥ 5* | `d09-lab-soi-giam-khao` (skip 3 + inc 3 / 11 = **54,5%**) |
+| **Day10** | 44 | 5/48 (10,4%) | *không có KC n ≥ 5* | `d10-lab-van-hanh-pilot` (skip 1 + inc 1 / 4 = 50,0% — *mẫu nhỏ*) |
+| **Day11** | 43 | 11/48 (22,9%) | *không có KC n ≥ 5* | `d11-lab-bo-ba-nguy-hiem` (skip 3 + inc 1 / 10 = **40,0%**) |
+| **Day12** | 26 | 6/36 (16,7%) | *không có KC n ≥ 5* | `d12-lab-loi-dan-o-khoa` (skip 2 + inc 0 / 3 = 66,7% — *mẫu nhỏ*) |
+| **Day13** | 50 | 12/26 (46,2%) | *không có KC n ≥ 5* | `d13-lab-pilot-trung-thuc` (skip 1 + inc 2 / 3 = 100,0% — *mẫu nhỏ*) |
 
-### Các chỉ số tổng hợp chính:
-1. **Tỷ lệ học viên gặp ít nhất một điểm nghẽn:** **382 / 436 học viên active (87.6%)** từng gặp ít nhất 1 bài KC có tỷ lệ sai toàn lớp $\ge 50\%$ hoặc không hoàn thành Mini Lab.
-2. **Các "ổ điểm nghẽn" lớn nhất:** Day05 (63.5% sai State Machine), Day07 (54.1% sai Retrieval Context), Day12 (62.7% kẹt Mini Lab SDLC).
-3. **Mức độ sụt giảm mẫu số (Drop-off):** Từ 412 học viên (Day01) giảm xuống 84 học viên (Day13), tức tỷ lệ nộp bài trước giờ giảm **79.6%**. Bắt buộc AI phải kích hoạt nguyên tắc HAX G10: cảnh báo mẫu số nhỏ khi $N < 150$.
+### Chỉ số tổng hợp chính
+1. **Tổng tỷ lệ sai KC lần đầu (Day01–Day13):** **401/1.975 (20,3%)**, nhưng có tới **7/13 ngày** xuất hiện KC (`n ≥ 5`) sai **≥ 35%** (đỉnh điểm 80,0% ở Day05 và 85,7% ở Day06).
+2. **Tỷ lệ bỏ qua / bỏ dở Mini Lab:** **6/13 ngày** có bài mini lab (`open ≥ 10` học viên) bị `skip + incomplete` **≥ 40%** (đỉnh điểm 58,3% ở Day07 và 56,2% ở Day06).
+3. **Sụt giảm mẫu số mạnh (Drop-off):** Từ **417** học viên active (Day01) giảm xuống **26** (Day12, giảm **93,8%**) và **50** (Day13, giảm **88,0%**). 3 ngày có `active < 50` (`Day10: 44`, `Day11: 43`, `Day12: 26`) → minh chứng trực tiếp cho nhu cầu cảnh báo mẫu nhỏ (HAX G10).
 
 ---
 
-## 4. Năm ví dụ cụ thể minh chứng điểm nghẽn
+## 4. Năm ví dụ cụ thể từ dữ liệu thật (`data/lesson_signals_agg.json`)
 
-1. **Ví dụ 1 (Day05 — Khái niệm State Machine & Vòng lặp dừng):**
-   - 198 / 312 học viên (63.5%) trả lời sai câu hỏi về điều kiện dừng của vòng lặp ReAct khi agent bị kẹt loop vô tận. 184 / 312 học viên (59.0%) không chạy ra được output cuối cùng của mini lab do lỗi state transition.
-2. **Ví dụ 2 (Day07 — Cơ chế Retrieval Context & Chunking):**
-   - 145 / 268 học viên (54.1%) chọn sai phương án về kích thước chunk size và overlap khi retrieval tài liệu dài, dẫn đến mất ngữ cảnh quan trọng.
-3. **Ví dụ 3 (Day09 — Đánh giá & Phân tích lỗi):**
-   - 112 / 215 học viên (52.1%) bỏ dở mini lab khi phải tự viết hàm đo lường metric F1 / Recall cho LLM judge, gây dồn ứ câu hỏi kỹ thuật khi vào buổi lab.
-4. **Ví dụ 4 (Day10 — PoC to Pilot Gate & Ngưỡng chấp nhận):**
-   - 96 / 168 học viên (57.1%) không đạt điều kiện pass ở bước xác định ngưỡng latency và cost budget cho kịch bản triển khai pilot thực tế.
-5. **Ví dụ 5 (Day12 — AI-SDLC Multi-step Workflow):**
-   - 89 / 142 học viên (62.7%) bị fail ở khâu nối pipeline 3 bước tự động. Do số lượng học viên làm bài chỉ còn 142 ($< 150$), đây là điển hình của trường hợp vừa có tỷ lệ lỗi cao vừa thuộc diện dữ liệu mẫu nhỏ cần chú thích thận trọng.
+1. **Ví dụ 1 (`Day05` — `ai_product_canvas`):** **12/15 lượt trả lời lần đầu bị sai (80,0%)**, góp phần đẩy tỷ lệ sai chung Day05 lên **55/180 (30,6%)** trên 134 học viên active.
+2. **Ví dụ 2 (`Day06` — `label_agreement_beyond_raw_percent` & `d06-lab-tram-gate`):** Tỷ lệ sai KC chung cao nhất các ngày có mẫu khá (**41/93 = 44,1%**), riêng `label_agreement_beyond_raw_percent` sai **6/7 (85,7%)**; đồng thời mini lab `d06-lab-tram-gate` có **9/16 học viên (56,2%)** bấm skip hoặc chưa hoàn thành.
+3. **Ví dụ 3 (`Day07` — `d07-lab-ngan-sach-context` & `tool_definition_context_cost`):** **7/12 học viên (58,3%)** mở mini lab `d07-lab-ngan-sach-context` bấm skip (5) hoặc bỏ dở (2); đồng thời KC `tool_definition_context_cost` sai **6/10 (60,0%)**.
+4. **Ví dụ 4 (`Day01` — `chatbot_is_app_around_model` & video `d01-r1-v02.txt`):** Trên 417 học viên active, **16/41 lượt (39,0%)** sai `chatbot_is_app_around_model`, **31/72 học viên (43,1%)** chưa hoàn thành/skip `d01-lab-ban-la-llm`, và riêng video `Day01/d01-r1-v02.txt` phát sinh **115 lượt** câu hỏi `video_question`.
+5. **Ví dụ 5 (`Day12` — Trường hợp mẫu rất nhỏ):** Chỉ có **26 học viên active**, **0 KC có `n ≥ 5`**, mini lab chỉ có **3 người mở** — là ví dụ điển hình buộc hệ thống phải gắn cảnh báo độ tin cậy thấp thay vì kết luận cho cả lớp.
 
 ---
 
 ## 5. Giới hạn của dữ liệu
 
-- **Chỉ ghi nhận hành vi, không có nội dung chữ chat:** Dữ liệu log chỉ phản ánh *sự kiện* (trả lời đúng/sai, bắt đầu/kết thúc lab, click timestamp). Log hoàn toàn **không lưu văn bản câu hỏi chi tiết hay tin nhắn trao đổi của học viên** trong file `chat.csv` (nhằm đảm bảo quyền riêng tư).
-- **Hệ quả đối với AI:** AI không được suy diễn bừa bãi nguyên nhân chi tiết nếu không có căn cứ từ dữ liệu số; khi báo cáo cho Giảng viên, AI phải nêu rõ giới hạn này để Giảng viên chủ động hỏi nhanh lớp vào đầu giờ.
-- **Kiểm chứng chéo:** Bằng chứng số liệu này được kiểm chứng và bổ sung bởi **Nguồn 2 (Phỏng vấn thực tế ≥3 Giảng viên & Lab Coach)** tại `evidence/summary.md` và `evidence/interviews/`.
+- **Chỉ ghi nhận hành vi, không có nội dung chữ chat:** Log đã được BTC ẩn danh, không lưu văn bản câu hỏi hay câu trả lời tự do của học viên (chỉ có độ dài ký tự và số lượt hỏi theo video). Do đó nguyên nhân sâu xa (không hiểu bài vs thiếu thời gian vs lỗi kỹ thuật) chỉ là giả thuyết để Giảng viên/Lab Coach kiểm chứng đầu giờ.
+- **Khác biệt định nghĩa mẫu số:** Mẫu số KC tính theo lượt trả lời hợp lệ lần đầu (`video_quiz`, `pre_post_post`); mẫu số Mini Lab tính theo số học viên distinct mở từng `lab_key` (khác với tổng `active_learners` trong ngày).
+- **Kiểm chứng chéo (Nguồn 2):** Số liệu này đang được kiểm chứng chéo bằng phỏng vấn thực tế **≥3 Giảng viên / Lab Coach** (lưu log tại `evidence/interviews/P1.md`–`P3.md` và tổng hợp tại `evidence/summary.md` trước CP3).

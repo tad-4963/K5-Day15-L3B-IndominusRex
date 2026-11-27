@@ -7,10 +7,12 @@ from tracing import tool
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SIGNALS_PATH = os.path.join(ROOT, "data", "lesson_signals_agg.json")
-_DAY_RE = re.compile(r"\bday\s*0*(\d{1,2})\b|\bngày\s*0*(\d{1,2})\b", re.I)
+_DAY_RE = re.compile(r"\bday\s*0*(\d{1,2})\b|\bngày\s*0*(\d{1,2})\b|\bd0*(\d{1,2})-r\d", re.I)
 _STUDENT_RE = re.compile(r"\b(?:L\d{4}|hv\w*)\b", re.I)
 _RANK_RE = re.compile(r"\b(xếp hạng|xep hang|top\s*\d+\s*(?:học viên|hoc vien)|yếu nhất|yeu nhat|giỏi nhất|gioi nhat|liệt kê.*học viên|liet ke.*hoc vien)\b", re.I)
 _INJECTION_RE = re.compile(r"(bỏ qua|bo qua).{0,40}(hướng dẫn|huong dan|instruction)|reveal.{0,20}(prompt|system)|ignore.{0,30}instruction", re.I)
+_OUT_OF_SCOPE_TEACHER_RE = re.compile(r"(giảng viên|giang vien).{0,30}(tệ nhất|te nhat|kém nhất|kem nhat|đánh giá|danh gia|xếp hạng|xep hang)", re.I)
+_OUT_OF_SCOPE_SLIDE_RE = re.compile(r"(soạn|soan|viết|viet).{0,30}(trọn bộ|tron bo|toàn bộ|toan bo|\d+\s*trang).{0,20}(slide|giáo án|giao an)", re.I)
 
 
 @tool
@@ -19,6 +21,10 @@ def parse_and_guard_request(query: str) -> dict:
     text = str(query or "")
     if _STUDENT_RE.search(text) or _RANK_RE.search(text) or _INJECTION_RE.search(text):
         return {"blocked": True, "block_reason": "Mình chỉ cung cấp số liệu tổng hợp cấp lớp, không truy xuất hay xếp hạng cá nhân học viên.", "need_clarify": False, "lesson_ids": [], "focus": "all"}
+    if _OUT_OF_SCOPE_TEACHER_RE.search(text):
+        return {"blocked": True, "block_reason": "Mình không đánh giá hay xếp hạng năng lực giảng viên. Dữ liệu pre-class chỉ phản ánh độ khó nội dung và hành vi tự học trước buổi học.", "need_clarify": False, "lesson_ids": [], "focus": "all"}
+    if _OUT_OF_SCOPE_SLIDE_RE.search(text):
+        return {"blocked": True, "block_reason": "Soạn trọn bộ slide/giáo án nằm ngoài phạm vi. Mình chỉ hỗ trợ tóm tắt Top 3 điểm nghẽn pre-class (Day01–Day13) và gợi ý 1 hoạt động gỡ vướng 5–10 phút đầu giờ.", "need_clarify": False, "lesson_ids": [], "focus": "all"}
     ids = []
     for match in _DAY_RE.finditer(text):
         number = next((g for g in match.groups() if g), None)

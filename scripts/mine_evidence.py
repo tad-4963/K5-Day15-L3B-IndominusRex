@@ -1,75 +1,95 @@
-"""Script khai phá dữ liệu (Data Mining) cho bằng chứng đau của Giảng viên & Lab Coach.
-Tác giả: Hoàng Thế Phong (2A202603832) — Cặp 2.
-Mục tiêu: Đếm chính xác tỷ lệ điểm nghẽn bài học pre-class (x/N, %) qua 13 ngày học.
-"""
+"""Script khai phá dữ liệu (Data Mining) từ file tổng hợp ẩn danh `data/lesson_signals_agg.json`.
 
+File `data/lesson_signals_agg.json` được sinh trực tiếp từ `data/preclass/*.csv`
+bằng `scripts/build_lesson_signals.py` (không chứa mã học viên `hv`).
+Chạy lệnh: python scripts/mine_evidence.py
+"""
 import json
 import os
 import sys
 
-# Dữ liệu tổng hợp từ log pre-class khoá học AI20K (721 học viên đăng ký, 436 học viên active)
-DATA_SUMMARY = {
-    "total_enrolled": 721,
-    "total_active": 436,
-    "days": {
-        "Day01": {"active": 412, "kc_errors": 75, "lab_incomplete": 35, "bottleneck_topic": "Cài đặt môi trường & Python cơ bản"},
-        "Day02": {"active": 388, "kc_errors": 95, "lab_incomplete": 54, "bottleneck_topic": "Prompt Engineering căn bản"},
-        "Day03": {"active": 354, "kc_errors": 112, "lab_incomplete": 73, "bottleneck_topic": "Tool use & function calling"},
-        "Day04": {"active": 335, "kc_errors": 100, "lab_incomplete": 73, "bottleneck_topic": "ReAct pattern loop"},
-        "Day05": {"active": 312, "kc_errors": 198, "lab_incomplete": 184, "bottleneck_topic": "Agent Loop & State Machine"},
-        "Day06": {"active": 289, "kc_errors": 99, "lab_incomplete": 75, "bottleneck_topic": "Data Ingestion & Embedding"},
-        "Day07": {"active": 268, "kc_errors": 145, "lab_incomplete": 129, "bottleneck_topic": "Retrieval Context & Vector Search"},
-        "Day08": {"active": 245, "kc_errors": 95, "lab_incomplete": 75, "bottleneck_topic": "Workflow to Autonomous Agent"},
-        "Day09": {"active": 215, "kc_errors": 91, "lab_incomplete": 112, "bottleneck_topic": "Evaluation & Failure Analysis"},
-        "Day10": {"active": 168, "kc_errors": 78, "lab_incomplete": 96, "bottleneck_topic": "PoC to Pilot Gate"},
-        "Day11": {"active": 152, "kc_errors": 62, "lab_incomplete": 58, "bottleneck_topic": "Guardrails & Human-in-the-loop"},
-        "Day12": {"active": 142, "kc_errors": 73, "lab_incomplete": 89, "bottleneck_topic": "AI-SDLC & Multi-step Workflow"},
-        "Day13": {"active": 84, "kc_errors": 45, "lab_incomplete": 55, "bottleneck_topic": "Launch Economics & Production Cost"},
-    }
-}
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+AGG_PATH = os.path.join(ROOT, "data", "lesson_signals_agg.json")
+TOTAL_ENROLLED = 721
+TOTAL_ACTIVE = 436
+
 
 def analyze():
-    print("=" * 70)
-    print("BÁO CÁO KHAI PHÁ DỮ LIỆU LOG PRE-CLASS (AI20K COHORT V)")
-    print(f"Tổng số học viên đăng ký: {DATA_SUMMARY['total_enrolled']}")
-    print(f"Tổng số học viên active (làm ít nhất 1 bài pre-class): {DATA_SUMMARY['total_active']}")
-    print(f"Tỷ lệ active: {DATA_SUMMARY['total_active']}/{DATA_SUMMARY['total_enrolled']} ({DATA_SUMMARY['total_active']/DATA_SUMMARY['total_enrolled']*100:.1f}%)")
-    print("=" * 70)
+    with open(AGG_PATH, encoding="utf-8") as f:
+        payload = json.load(f)
+    days = payload["days"]
 
-    # Đếm số học viên từng gặp lỗi nặng
-    high_bottleneck_days = []
-    
-    print(f"{'Ngày':<8} | {'Active (N)':<10} | {'Sai KC (x)':<12} | {'% Sai KC':<10} | {'Kẹt Lab (x)':<12} | {'% Kẹt Lab':<10} | {'Chủ đề nghẽn chính'}")
-    print("-" * 90)
+    print("=" * 96)
+    print("BÁO CÁO KHAI PHÁ DỮ LIỆU PRE-CLASS (TỪ data/lesson_signals_agg.json — 05/11–25/11/2026)")
+    print(f"Tổng tài khoản: {TOTAL_ENROLLED} | Học viên có hoạt động: {TOTAL_ACTIVE}/{TOTAL_ENROLLED} ({TOTAL_ACTIVE/TOTAL_ENROLLED*100:.1f}%)")
+    print("=" * 96)
+    print(f"{'Ngày':<6} | {'Active':>6} | {'KC sai (lần 1)':<16} | {'KC khó nhất (n>=5)':<44} | {'Lab skip/inc cao nhất'}")
+    print("-" * 120)
 
-    for day, stats in DATA_SUMMARY["days"].items():
-        n = stats["active"]
-        kc_err = stats["kc_errors"]
-        kc_pct = (kc_err / n) * 100
-        lab_inc = stats["lab_incomplete"]
-        lab_pct = (lab_inc / n) * 100
-        
-        if kc_pct >= 50.0 or lab_pct >= 50.0:
-            high_bottleneck_days.append((day, stats["bottleneck_topic"], kc_pct, lab_pct))
-            
-        print(f"{day:<8} | {n:<10} | {kc_err:<12} | {kc_pct:>8.1f}% | {lab_inc:<12} | {lab_pct:>8.1f}% | {stats['bottleneck_topic']}")
+    total_kc_wrong = 0
+    total_kc_ans = 0
+    days_with_heavy_kc = []
+    days_with_heavy_lab = []
+    low_sample_days = []
 
-    print("=" * 70)
-    print("CÁC ĐIỂM NGHẼN NGHIÊM TRỌNG NHẤT (Tỷ lệ sai/kẹt >= 50%):")
-    for d, topic, kc_p, lab_p in high_bottleneck_days:
-        print(f" - {d}: {topic} -> Sai KC: {kc_p:.1f}%, Kẹt/Bỏ Lab: {lab_p:.1f}%")
+    for day in sorted(days.keys()):
+        d = days[day]
+        active = d["active_learners"]
+        if active < 50:
+            low_sample_days.append((day, active))
 
-    print("\nCHỈ SỐ TỔNG HỢP (PHỤC VỤ SPEC §1 & EVIDENCE):")
-    # Tỷ lệ học viên active gặp ít nhất 1 điểm nghẽn
-    students_with_bottlenecks = 382
-    print(f"1. Tỷ lệ học viên gặp ít nhất 1 điểm nghẽn pre-class: {students_with_bottlenecks}/{DATA_SUMMARY['total_active']} ({students_with_bottlenecks/DATA_SUMMARY['total_active']*100:.1f}%)")
-    # Độ sụt giảm active từ Day 1 đến Day 13
-    d1_active = DATA_SUMMARY["days"]["Day01"]["active"]
-    d13_active = DATA_SUMMARY["days"]["Day13"]["active"]
-    drop_pct = (d1_active - d13_active) / d1_active * 100
-    print(f"2. Độ sụt giảm tỷ lệ làm pre-class (Day01 -> Day13): {d13_active}/{d1_active} còn {d13_active/d1_active*100:.1f}% (Giảm {drop_pct:.1f}%)")
-    print("3. Giới hạn dữ liệu: Không có nội dung text chat của học viên (chỉ có event click/quiz/timestamp).")
-    print("=" * 70)
+        kcs = d.get("kc_stats") or {}
+        w_sum = sum(v["wrong"] for v in kcs.values())
+        t_sum = sum(v["total"] for v in kcs.values())
+        total_kc_wrong += w_sum
+        total_kc_ans += t_sum
+        kc_rate = (w_sum / t_sum * 100) if t_sum else 0.0
+
+        hard_kcs = sorted(
+            [(v["wrong"] / v["total"] * 100, v["wrong"], v["total"], k) for k, v in kcs.items() if v["total"] >= 5],
+            reverse=True,
+        )
+        top_kc_str = f"{hard_kcs[0][3]} ({hard_kcs[0][1]}/{hard_kcs[0][2]}={hard_kcs[0][0]:.1f}%)" if hard_kcs else "không có KC n>=5"
+        if hard_kcs and hard_kcs[0][0] >= 35.0:
+            days_with_heavy_kc.append((day, hard_kcs[0]))
+
+        labs = d.get("lab_stats") or {}
+        lab_issues = []
+        for lk, lv in labs.items():
+            op = lv["open"]["count"]
+            sk = lv["skip"]["count"]
+            inc = lv["incomplete"]["count"]
+            if op > 0:
+                unfin = sk + inc
+                lab_issues.append((unfin / op * 100, sk, inc, op, lk))
+        lab_issues.sort(reverse=True)
+        top_lab_str = (
+            f"{lab_issues[0][4]} (skip {lab_issues[0][1]} + inc {lab_issues[0][2]}/{lab_issues[0][3]}={lab_issues[0][0]:.1f}%)"
+            if lab_issues
+            else "—"
+        )
+        if lab_issues and lab_issues[0][3] >= 10 and lab_issues[0][0] >= 40.0:
+            days_with_heavy_lab.append((day, lab_issues[0]))
+
+        print(f"{day:<6} | {active:>6} | {w_sum:>3}/{t_sum:<4} ({kc_rate:>5.1f}%) | {top_kc_str:<44} | {top_lab_str}")
+
+    d01 = days["Day01"]["active_learners"]
+    d12 = days["Day12"]["active_learners"]
+    d13 = days["Day13"]["active_learners"]
+    print("=" * 96)
+    print(f"Tổng câu trả lời KC lần đầu (Day01–Day13): sai {total_kc_wrong}/{total_kc_ans} ({total_kc_wrong/total_kc_ans*100:.1f}%)")
+    print(f"Số ngày có KC (n>=5) sai >= 35%: {len(days_with_heavy_kc)}/13 ngày")
+    print(f"Số ngày có Mini Lab (open>=10) skip+incomplete >= 40%: {len(days_with_heavy_lab)}/13 ngày")
+    print(f"Drop-off active: Day01 ({d01}) -> Day12 ({d12}, giảm {(d01-d12)/d01*100:.1f}%) | Day13 ({d13}, giảm {(d01-d13)/d01*100:.1f}%)")
+    print(f"Các ngày mẫu nhỏ (active < 50): {', '.join(f'{d} ({a})' for d, a in low_sample_days)}")
+    print("=" * 96)
+
 
 if __name__ == "__main__":
     analyze()

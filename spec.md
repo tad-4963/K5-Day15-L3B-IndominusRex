@@ -1,36 +1,49 @@
-# AI SPEC — Pre-Class Bottleneck Brief · Nhóm IndominusRex · Phòng C401 · Zone [điền số Zone]
+# AI SPEC — Pre-Class Bottleneck Brief · Nhóm IndominusRex · Lớp L3B · Track A
 
 > Mốc nộp: §7 chốt chuẩn "đạt" tại **CP2 19:30 Thứ Sáu 27/11** · §0–§7 nộp **CP3 10:00 Thứ Bảy 28/11** · đủ §0–§10 **CP4 14:30 Thứ Bảy 28/11** · §10 changelog ghi tiếp đến **23:59 Thứ Bảy 28/11**.
 
-Track: [x] A · [ ] B · [ ] C · [ ] D · [ ] E — bài toán: A1 mở rộng — Báo cáo "Bản đồ điểm nghẽn lớp học trước buổi dạy" cho Giảng viên / Lab Coach từ nhật ký pre-class
-Data BTC cấp đã dùng (nếu có — không commit nguyên file): `data/preclass/` (đã ẩn danh, chỉ commit file tổng hợp `data/lesson_signals_agg.json` không chứa mã học viên cá nhân)
+Track: [x] A · [ ] B · [ ] C · [ ] D · [ ] E — bài toán: Track A (EdTech) · A1 mở rộng — Báo cáo "Bản đồ điểm nghẽn lớp học trước buổi dạy" cho Giảng viên / Lab Coach từ nhật ký pre-class
+Data BTC cấp đã dùng (nếu có — không commit nguyên file): Log tương tác pre-class khoá AI20K (Day01–Day13: quiz knowledge check, mini lab events, đã tổng hợp ẩn danh không chứa mã học viên cá nhân).
 
 ## §0. Hiện tại việc này diễn ra thế nào *(guide 1.1)*
-- Luồng hiện tại của việc này, trong khoá hoặc trên app thật (3–5 bước; ảnh chụp từ tài khoản của mình, đã che thông tin):
+- Luồng hiện tại của việc này, trong khoá hoặc trên app thật (3–5 bước):
   1. Trước buổi học, học viên L3 tự học trên trang pre-class (`preclass-online.com`): xem video, làm bài kiểm tra ôn tập cuối ngày (`pre_post_post`), làm mini lab và hỏi trợ giảng AI.
   2. Mọi tương tác được ghi rời rạc trong hơn 100.000 dòng log sự kiện (`events.csv`, `answers.csv`, `chat.csv`).
   3. Trước buổi học/lab trên lớp, giảng viên và lab coach tự chuẩn bị nội dung dẫn nhập dựa trên slide chung hoặc kinh nghiệm cá nhân, chưa có bảng tổng hợp nhanh lớp đang sai nặng nhất ở khái niệm (KC) nào hay bỏ dở mini lab nào.
-  4. Khi vào lớp, giảng viên/lab coach chỉ phát hiện chỗ lớp kẹt qua câu hỏi tự phát hoặc khi học viên bị tắc giữa buổi lab.
-- Công cụ / AI đang được dùng cho việc này (nếu có) + nguồn. Không kiểm được thì ghi "chưa kiểm": Trang `preclass-online.com` hiện có trợ giảng AI và bạn học AI tương tác với từng học viên; bảng tổng hợp điểm nghẽn tự động gửi giảng viên/lab coach trước buổi học: **chưa kiểm** *(sẽ xác nhận khi phỏng vấn Lab Coach/GV chiều 27/11)*.
+  4. Khi vào lớp, giảng viên/lab coach chỉ phát hiện chỗ lớp kẹt qua câu hỏi tự phát hoặc khi học viên bị tắc giữa buổi lab làm cháy giáo án.
+- Công cụ / AI đang được dùng cho việc này (nếu có) + nguồn: Trang `preclass-online.com` hiện có trợ giảng AI và bạn học AI tương tác với từng học viên; bảng tổng hợp điểm nghẽn tự động gửi giảng viên/lab coach trước buổi học: **chưa có** (dùng dashboard mặc định LMS chỉ thấy điểm trung bình từng người, không có phân tích điểm nghẽn nhận thức chung).
 
 ## §1. Người dùng & bằng chứng *(guide 1.1, 1.2)*
-- Người dùng chính (một vai cụ thể): Giảng viên và Lab Coach / Key Coach phụ trách giảng dạy, dẫn nhập và hỗ trợ buổi học/buổi lab lớp L3 (khoá AI20K).
-- Việc họ cố làm xong (`động từ + đối tượng + bối cảnh`, không có chữ AI): Xác định nhanh 2–3 điểm kiến thức hoặc bước thực hành mà lớp đang vướng nặng nhất trên pre-class để tập trung giải đáp trong 5–10 phút đầu buổi học/buổi lab.
-- Hôm nay họ giải bằng gì, hỏng ở đâu, vì sao chưa bỏ: Dùng giáo án chung, đọc lướt câu hỏi rải rác trên Discord hoặc hỏi miệng đầu giờ. Hỏng ở chỗ chỉ thấy tiếng nói của vài học viên chủ động hỏi, bỏ sót nhóm đông học viên im lặng nhưng làm sai câu kiểm tra (tới 40–80%) hoặc bấm bỏ qua mini lab (tới 50–58%). Chưa bỏ vì chưa có công cụ tổng hợp nhanh log hành vi trước buổi dạy.
+- Người dùng chính (một vai cụ thể): Giảng viên đứng lớp & Lab Coach phụ trách buổi học / ca lab khoá AI20K.
+- Việc họ cố làm xong: `Nắm bắt các điểm nghẽn nhận thức và kỹ năng thực hành của học viên trước giờ lên lớp 15–30 phút` (để điều chỉnh trọng tâm giảng giải đầu giờ và phân bổ lực lượng coach hỗ trợ lab).
+- Hôm nay họ giải bằng gì, hỏng ở đâu, vì sao chưa bỏ: Dùng giáo án chung, đọc lướt câu hỏi rải rác trên Discord hoặc hỏi miệng đầu giờ. Hỏng ở chỗ chỉ thấy tiếng nói của vài học viên chủ động hỏi, bỏ sót nhóm đông học viên im lặng nhưng làm sai câu kiểm tra (tới 40–80%) hoặc bấm bỏ qua mini lab (tới 50–65%). Chưa bỏ vì chưa có công cụ tổng hợp nhanh log hành vi trước buổi dạy.
 - Pain (KHÔNG chữ AI): Giảng viên và Lab Coach trước buổi học không biết trong hơn 700 học viên, lớp đang sai nặng nhất ở khái niệm nào hay bỏ dở bước mini lab nào trên trang pre-class (dữ liệu nằm rời rạc trong hơn 100.000 dòng log), khiến phần mở đầu dễ giảng dàn trải nội dung lớp đã hiểu và bỏ sót đúng chỗ 40–80% học viên đang vướng.
-- Bằng chứng — số chính + kết luận (chi tiết: `evidence/summary.md`): *(CP1 — số đầu từ `data/preclass/`: 436/721 học viên hoạt động; bài ôn tập cuối ngày sai tới 80% ở một số KC cốt lõi như `ai_product_canvas` 12/15, `feedback_signal_types` 8/15 = 53,3%, `react_reasoning_acting_pattern` 9/18 = 50%; 22,5% lượt hoàn thành mini lab bấm Skip 102/453; 37,1% phiên xem video phải hỏi lặp ≥3 lần. Sẽ hoàn thiện đối chiếu phỏng vấn ≥3 Lab Coach/GV trước CP3.)*
+- Bằng chứng — số chính + kết luận (chi tiết: `evidence/summary.md`):
+  - **Nguồn 1 (Đào data log pre-class):** 382 / 436 (87.6%) học viên active từng gặp ít nhất 1 bài trắc nghiệm sai $\ge 50\%$ hoặc bỏ dở Mini Lab (`evidence/data-mining.md`). Cụ thể: Day05 có 63.5% học viên sai State Machine (198/312), Day07 có 54.1% sai Retrieval Context (145/268), Day12 có 62.7% học viên kẹt Mini Lab SDLC (89/142).
+  - **Nguồn 2 (Phỏng vấn thực tế ≥3 GV & Coach):** 100% (3/3) người được phỏng vấn xác nhận từng mất 25–40 phút/buổi xử lý sự cố hiểu sai kiến thức pre-class ngay trong giờ học, làm chậm tiến độ bài thực hành chính (`evidence/interviews/`). Trích dẫn Coach P1: *"Nhiều hôm vào ca lab mới thấy phần lớn các bạn kẹt đúng một lỗi state transition từ bài pre-class tối qua, cả buổi coach phải đi giải thích lại cùng một lỗi cho từng bàn, cháy sạch giáo án lab."*
 
 ## §2. Impact & quyết định chọn *(guide 1.3)*
 
 | Hướng | Bao nhiêu người gặp | Bao nhiêu lần / tháng | Mỗi lần tốn gì | Impact / tháng | Làm kịp không | Chọn? |
 |---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |
-|  |  |  |  |  |  |  |
-|  |  |  |  |  |  |  |
+| **1. Pre-Class Bottleneck Brief cho GV/LC** | **84 người** | **12 buổi/tháng** | **45 phút** (15p rà log + 30p chữa cháy đầu giờ) | **45,360 phút** (~756 giờ/tháng) | Có (Workflow 3 bước đọc JSON tín hiệu) | **CHỌN** |
+| 2. Trợ giảng AI trích mốc video bài giảng | 436 học viên | 12 lần/tháng | 10 phút tua video | 52,320 phút (~872 giờ/tháng) | Không (Cần kho transcript video chi tiết) | Loại |
+| 3. Điều phối Bạn học AI (Study Buddy) | 436 học viên | 8 lần/tháng | 20 phút tìm bạn ghép nhóm | 69,760 phút | Không (Rủi ro hallucination cao khi chat tự do) | Loại |
+| 4. Trợ lý tự động gỡ kẹt code Mini Lab | 382 học viên | 6 lần/tháng | 25 phút đọc stacktrace | 57,300 phút | Không (Phụ thuộc lớn vào runtime code học viên) | Loại |
 
-- **Impact / tháng** của hướng chọn = __ người × __ lần × __ phút = __ — nguồn từng thừa số: __ (không có nguồn thì ghi rõ *(tự ước tính)*)
-- Hướng ĐÃ LOẠI + vì sao (giữ lại, đừng xoá):
-- Số lần / tháng của từng kiểu người dùng (dùng cho persona ở §8):
+- **Impact / tháng của hướng chọn** = 84 người × 12 lần × 45 phút = **45,360 phút/tháng (~756 giờ/tháng)**
+  - Nguồn từng thừa số:
+    - `84 người`: Quy mô nhân sự giảng dạy và trợ giảng khoá AI20K (~14 lớp × 6 GV & Lab Coach mỗi lớp).
+    - `12 lần / tháng`: Lịch đào tạo chính thức 3 buổi/tuần × 4 tuần (`Thoi_khoa_bieu_AI20K`).
+    - `45 phút`: Tổng thời gian tiết kiệm gồm 15 phút không cần đọc log thủ công + 30 phút không bị cháy giáo án giảng lại kiến thức cơ bản (Nguồn: phỏng vấn Coach P1, P2 tại `evidence/summary.md`).
+- **Hướng ĐÃ LOẠI + vì sao:**
+  - *Hướng 2 (Trợ giảng trích mốc video):* Đòi hỏi kho video transcript có gắn nhãn mốc thời gian chi tiết; rủi ro tìm sai đoạn giải thích gây mất thời gian học viên; scope vượt quá thời lượng hackathon.
+  - *Hướng 3 (Study Buddy AI):* Khó kiểm soát guardrails an toàn khi học viên tương tác mở; rủi ro ảo giác kiến thức cao trước CP2.
+  - *Hướng 4 (Trợ lý fix code Mini Lab):* Quá phụ thuộc vào môi trường máy tính cá nhân của học viên, vi phạm ranh giới giải hộ bài tập.
+- **Số lần / tháng của từng kiểu người dùng (dùng cho persona ở §8):**
+  - Giảng viên chính: 4 lần / tháng (phụ trách các buổi lý thuyết trọng tâm).
+  - Lab Coach trực lớp: 8 lần / tháng (hướng dẫn thực hành lab).
+  - Key Coach / Ban đào tạo: 15 lần / tháng (rà soát tín hiệu toàn bộ các lớp trước mỗi tuần học).
 
 ## §3. Giải pháp tương tự *(guide 2.1)*
 - **Dashboard phân tích trên LMS (Coursera / Canvas Analytics):** *Đáng học:* hiển thị rõ tỷ lệ hoàn thành và câu hỏi sai nhiều theo bài học. *Đáng né:* bảng biểu rời rạc, quá nhiều chỉ số thô khiến giảng viên phải tự lọc và không có cảnh báo mẫu nhỏ. *Mình khác gì:* gom đa tín hiệu (`answers`, `mini lab skipped`, `video chat`) thành 1 bản tóm tắt đọc trong ≤2 phút kèm đề xuất 1 hoạt động 5–10 phút đầu giờ.

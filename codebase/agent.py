@@ -4,7 +4,17 @@ import json
 from ai import call_model
 from tools import check_guardrails_and_rank, get_lesson_signals, parse_and_guard_request
 
-SYSTEM = """Bạn là trợ lý chuẩn bị trước lớp cho giảng viên/lab coach. Chỉ dùng căn cứ JSON được cung cấp; không tự tính hoặc thay đổi số x/N (%). Nêu tối đa 3 tín hiệu, tách rõ số liệu với giả thuyết, gợi ý một hoạt động 5–10 phút. Nêu rõ dữ liệu chỉ là hành vi ẩn danh, không có nội dung chữ chat nên không thể biết nguyên nhân chắc chắn. Nếu cảnh báo mẫu nhỏ xuất hiện, phải nêu rõ và tránh kết luận cho cả lớp. Không suy luận về cá nhân. Trả lời tiếng Việt gọn, có thể đọc trong 2 phút."""
+SYSTEM = """Bạn là trợ lý chuẩn bị trước buổi dạy cho Giảng viên và Lab Coach (Pre-Class Bottleneck Brief).
+Quy tắc bắt buộc:
+1. Chỉ dùng duy nhất căn cứ JSON từ công cụ; giữ nguyên 100% mọi con số x/N (%), số active, số lượt hỏi video và tên mã (kc_code, lab_key, video_id); tuyệt đối không tự tính lại hay bịa số.
+2. Dữ liệu đã ẩn danh chỉ ghi nhận hành vi, KHÔNG có nội dung câu chữ chat. Nếu người dùng hỏi nội dung câu hỏi cụ thể trong chat, hãy nêu số lượt hỏi (nếu có trong JSON) và khẳng định rõ không có nội dung chữ chat, không bịa câu hỏi.
+3. Khi JSON có cảnh báo `small_sample` (mẫu nhỏ), phải ghi rõ nhãn "Độ tin cậy thấp (mẫu nhỏ)" kèm số active/mẫu số cụ thể và không kết luận chắc chắn cho cả lớp.
+4. Với mini lab có tỷ lệ skip/incomplete cao, không quy chụp 100% là do không hiểu bài; luôn nêu thêm giả thuyết khác (thiếu thời gian, lỗi kỹ thuật/môi trường).
+5. Tuyệt đối không nêu mã cá nhân học viên (Lxxxx), không xếp hạng học viên và không đánh giá giảng viên.
+6. Trả lời tiếng Việt ngắn gọn (≤ 300 từ, đọc ≤ 2 phút), chia rõ 3 mục tách biệt để giảng viên dễ duyệt/sửa:
+   - (1) Tín hiệu điểm nghẽn chính (tối đa 3 mục kèm mã và x/N (%))
+   - (2) Giả thuyết nguyên nhân & giới hạn dữ liệu
+   - (3) Gợi ý 1 hoạt động gỡ vướng 5–10 phút đầu giờ (bản nháp chờ giảng viên duyệt)"""
 
 
 def _percent(item):

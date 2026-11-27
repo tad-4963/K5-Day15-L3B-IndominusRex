@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5ef">
+  <title>Pre-Class Brief · AI20K</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1d2c27;
+      --muted: #718078;
+      --line: #e3e8df;
+      --paper: #fffefa;
+      --canvas: #f4f5ef;
+      --green: #276b4c;
+      --green-dark: #194a36;
+      --green-pale: #e8f2e9;
+      --amber: #8a5b18;
+      --amber-pale: #fff3d9;
+      --shadow: 0 22px 60px rgba(28, 49, 39, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, textarea { font: inherit; }
+    .shell { max-width: 1320px; margin: 0 auto; padding: 24px 34px 52px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 28px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 14px; background: var(--green); color: white; font-size: 21px; box-shadow: 0 8px 18px rgba(39,107,76,.18); }
+    .brand-name { font-size: 14px; font-weight: 760; letter-spacing: -.02em; }
+    .brand-sub { color: var(--muted); font-size: 11px; letter-spacing: .11em; text-transform: uppercase; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .privacy-pill, .model-pill { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,254,250,.85); padding: 8px 12px; color: #526158; font-size: 12px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #c6872f; box-shadow: 0 0 0 3px #faefd9; }
+    .model-pill.ready .dot { background: #32845b; box-shadow: 0 0 0 3px #e0f1e5; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; align-items: start; }
+    .main-card, .side-card { border: 1px solid var(--line); border-radius: 22px; background: var(--paper); box-shadow: var(--shadow); }
+    .main-card { min-height: 690px; padding: 36px 40px 30px; }
+    .eyebrow { display: flex; align-items: center; gap: 9px; color: var(--green); font-size: 11px; font-weight: 760; letter-spacing: .15em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 24px; height: 1px; background: #8eb39b; }
+    h1 { max-width: 650px; margin: 14px 0 10px; font-size: clamp(32px, 4vw, 48px); line-height: 1.08; letter-spacing: -.055em; font-weight: 680; }
+    .lede { max-width: 660px; margin: 0; color: var(--muted); font-size: 15px; }
+    .prompt-label { display: flex; justify-content: space-between; margin: 34px 0 9px; color: #34483e; font-size: 12px; font-weight: 700; }
+    .composer { border: 1px solid #dbe3d8; border-radius: 17px; background: #fff; transition: border .18s, box-shadow .18s; }
+    .composer:focus-within { border-color: #80a98d; box-shadow: 0 0 0 4px rgba(65,133,91,.1); }
+    textarea { display: block; width: 100%; min-height: 104px; resize: vertical; border: 0; outline: 0; background: transparent; padding: 17px 18px 11px; color: var(--ink); }
+    textarea::placeholder { color: #9ba69e; }
+    .composer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 11px 11px 17px; }
+    .hint { color: #849188; font-size: 11px; }
+    .send { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-width: 130px; border: 0; border-radius: 11px; background: var(--green); color: white; padding: 11px 15px; font-weight: 700; cursor: pointer; transition: background .18s, transform .18s; }
+    .send:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .send:disabled { opacity: .58; cursor: wait; transform: none; }
+    .send svg { width: 16px; height: 16px; }
+    .suggestions-heading { display: flex; align-items: center; gap: 8px; margin: 24px 0 10px; color: #78857c; font-size: 11px; font-weight: 730; letter-spacing: .1em; text-transform: uppercase; }
+    .suggestions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .suggestion { border: 1px solid var(--line); border-radius: 999px; background: #fbfcf8; padding: 8px 12px; color: #526259; font-size: 12px; cursor: pointer; transition: .18s; }
+    .suggestion:hover { border-color: #adc9b3; background: var(--green-pale); color: var(--green-dark); }
+    .result-wrap { margin-top: 28px; border-top: 1px solid #edf0eb; padding-top: 22px; }
+    .result-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+    .result-title { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 760; }
+    .result-icon { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 9px; background: var(--green-pale); color: var(--green); }
+    .draft-badge { color: var(--green); background: #edf5ee; border-radius: 999px; padding: 5px 9px; font-size: 10px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
+    .result-box { min-height: 92px; border: 1px solid #e8ece5; border-radius: 14px; background: #fcfdf9; padding: 17px 18px; color: #34483d; white-space: pre-wrap; }
+    .result-box.empty { display: flex; align-items: center; color: #89958d; font-size: 13px; }
+    .result-box.error { border-color: #f0d3cd; background: #fff8f6; color: #9a4338; }
+    .metrics { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+    .metric { border: 1px solid #edf0ea; border-radius: 8px; background: white; padding: 5px 8px; color: #6c7971; font-size: 10px; }
+    .safe-note { display: flex; gap: 10px; margin-top: 19px; border-radius: 12px; background: #f3f7ef; padding: 12px 14px; color: #64756a; font-size: 11px; }
+    .safe-note strong { color: #345d43; }
+    .side-card { padding: 22px; }
+    .side-title { margin: 0; font-size: 14px; letter-spacing: -.02em; }
+    .side-copy { margin: 6px 0 18px; color: var(--muted); font-size: 12px; }
+    .step { display: grid; grid-template-columns: 30px 1fr; gap: 11px; padding: 13px 0; border-top: 1px solid #edf0eb; }
+    .step-num { display: grid; width: 27px; height: 27px; place-items: center; border: 1px solid #dce9dd; border-radius: 9px; background: #f1f7f0; color: var(--green); font-size: 11px; font-weight: 760; }
+    .step b { display: block; margin: 1px 0 3px; font-size: 12px; }
+    .step span { display: block; color: var(--muted); font-size: 11px; }
+    .source-card { margin-top: 16px; border-radius: 14px; background: #f6f6ef; padding: 15px; }
+    .source-card b { display: flex; align-items: center; gap: 7px; font-size: 11px; }
+    .source-card p { margin: 7px 0 0; color: #758078; font-size: 11px; }
+    .footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; color: #96a098; font-size: 10px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; max-width: 360px; border-radius: 12px; background: #263a30; padding: 12px 16px; color: white; box-shadow: var(--shadow); font-size: 12px; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .side-card { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 16px; } .side-title,.side-copy,.source-card { grid-column: 1/-1; } }
+    @media (max-width: 620px) { .shell { padding: 16px 13px 30px; } .topbar { align-items: flex-start; } .top-actions { align-items: flex-end; flex-direction: column; } .privacy-pill { display: none; } .main-card { min-height: auto; padding: 25px 18px 20px; border-radius: 17px; } h1 { font-size: 34px; } .side-card { display: block; padding: 19px; } .footer { flex-direction: column; } .send { min-width: 112px; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">↗</div>
+        <div><div class="brand-name">Pre-Class Brief</div><div class="brand-sub">AI20K · Teaching insights</div></div>
+      </div>
+      <div class="top-actions">
+        <div class="privacy-pill"><span aria-hidden="true">◈</span> Chỉ dữ liệu tổng hợp · không có mã học viên</div>
+        <div class="model-pill" id="model-pill"><span class="dot"></span><span id="model-status">Đang kiểm tra model…</span></div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <main class="main-card">
+        <div class="eyebrow">Dành cho giảng viên & lab coach</div>
+        <h1>Biết lớp đang vướng gì trước giờ dạy.</h1>
+        <p class="lede">Tra cứu tín hiệu pre-class đã tổng hợp để chuẩn bị một phần mở đầu đúng trọng tâm. AI đưa bản nháp; bạn là người quyết định.</p>
+
+        <form id="ask-form">
+          <label class="prompt-label" for="query"><span>Câu hỏi của bạn</span><span id="char-count">0 / 2.000</span></label>
+          <div class="composer">
+            <textarea id="query" maxlength="2000" placeholder="Ví dụ: Day05 lớp đang kẹt gì?" required></textarea>
+            <div class="composer-bottom">
+              <span class="hint">Enter để gửi · Shift + Enter để xuống dòng</span>
+              <button class="send" id="send-button" type="submit">
+                <span id="send-label">Tạo brief</span>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div class="suggestions-heading"><span>Thử một câu hỏi</span></div>
+        <div class="suggestions">
+          <button class="suggestion" type="button" data-query="Tóm tắt điểm nghẽn lớp trước buổi dạy Day05 giúp tôi.">Day05 · brief lớp</button>
+          <button class="suggestion" type="button" data-query="Day12 lớp đang vướng gì? Nêu rõ độ tin cậy của mẫu.">Day12 · mẫu nhỏ</button>
+          <button class="suggestion" type="button" data-query="Liệt kê top 5 mã học viên L0213 sai nhiều nhất Day05.">Thử ranh giới riêng tư</button>
+          <button class="suggestion" type="button" data-query="So sánh mức độ kẹt của Day05 và Day10 giúp tôi.">So sánh hai ngày</button>
+        </div>
+
+        <section class="result-wrap" aria-live="polite">
+          <div class="result-head">
+            <div class="result-title"><span class="result-icon" aria-hidden="true">✳</span> Bản nháp điểm nghẽn</div>
+            <span class="draft-badge">Chờ bạn duyệt</span>
+          </div>
+          <div class="result-box empty" id="result">Bản tóm tắt sẽ xuất hiện ở đây sau khi bạn gửi câu hỏi.</div>
+          <div class="metrics" id="metrics" hidden></div>
+        </section>
+
+        <div class="safe-note"><span aria-hidden="true">ⓘ</span><span><strong>Giới hạn dữ liệu.</strong> Báo cáo chỉ dựa trên log hành vi đã ẩn danh; không chứa nội dung chat và không xác định nguyên nhân chắc chắn.</span></div>
+        <div class="footer"><span>Pre-Class Bottleneck Brief · Prototype</span><span>Workflow cố định · Người dạy duyệt trước khi dùng</span></div>
+      </main>
+
+      <aside class="side-card">
+        <h2 class="side-title">Một brief trong 3 bước</h2>
+        <p class="side-copy">Từ tín hiệu tổng hợp đến một hoạt động mở đầu có thể dùng ngay.</p>
+        <div class="step"><span class="step-num">01</span><div><b>Chọn ngày học</b><span>Hỏi Day01–Day13 hoặc so sánh hai ngày.</span></div></div>
+        <div class="step"><span class="step-num">02</span><div><b>Đọc tín hiệu</b><span>Tool tính x/N và xếp hạng điểm nghẽn.</span></div></div>
+        <div class="step"><span class="step-num">03</span><div><b>Duyệt gợi ý</b><span>Chỉnh hoặc bỏ qua hoạt động 5–10 phút.</span></div></div>
+        <div class="source-card"><b><span aria-hidden="true">▦</span> Nguồn dữ liệu</b><p>Log pre-class đã ẩn danh, tổng hợp theo bài học. Không truy xuất hồ sơ cá nhân.</p></div>
+      </aside>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const form = document.getElementById('ask-form');
+    const query = document.getElementById('query');
+    const result = document.getElementById('result');
+    const metrics = document.getElementById('metrics');
+    const sendButton = document.getElementById('send-button');
+    const sendLabel = document.getElementById('send-label');
+    const charCount = document.getElementById('char-count');
+    const toast = document.getElementById('toast');
+    let toastTimer;
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    query.addEventListener('input', () => {
+      charCount.textContent = `${query.value.length.toLocaleString('vi-VN')} / 2.000`;
+    });
+    query.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    document.querySelectorAll('.suggestion').forEach(button => {
+      button.addEventListener('click', () => {
+        query.value = button.dataset.query;
+        query.dispatchEvent(new Event('input'));
+        query.focus();
+      });
+    });
+
+    async function loadStatus() {
+      const pill = document.getElementById('model-pill');
+      const label = document.getElementById('model-status');
+      try {
+        const response = await fetch('/api/status');
+        const state = await response.json();
+        if (state.ready) {
+          pill.classList.add('ready');
+          label.textContent = `Model thật · ${state.model}`;
+        } else {
+          label.textContent = 'Chế độ fake · chưa cấu hình model';
+          showToast('Đang ở chế độ fake. Cấu hình model trước khi quay demo thật.');
+        }
+      } catch (_) {
+        label.textContent = 'Không kết nối được server';
+      }
+    }
+
+    function renderMetrics(data) {
+      metrics.replaceChildren();
+      const pairs = [
+        ['Model', data.model || '—'],
+        ['Model calls', data.model_calls],
+        ['Tool calls', data.tool_calls],
+        ['Token vào / ra', `${data.tokens_in} / ${data.tokens_out}`],
+        ['Thời gian', `${data.latency_s}s`],
+      ];
+      pairs.forEach(([name, value]) => {
+        const item = document.createElement('span');
+        item.className = 'metric';
+        item.textContent = `${name}: ${value}`;
+        metrics.appendChild(item);
+      });
+      metrics.hidden = false;
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const text = query.value.trim();
+      if (!text) return;
+      sendButton.disabled = true;
+      sendLabel.textContent = 'Đang xử lý…';
+      result.className = 'result-box empty';
+      result.textContent = 'Đang đọc tín hiệu tổng hợp và tạo bản nháp…';
+      metrics.hidden = true;
+      try {
+        const response = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: text }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Không thể tạo brief.');
+        result.className = 'result-box';
+        result.textContent = data.output || 'Không có nội dung trả về.';
+        renderMetrics(data);
+        if (!data.ready) showToast('Kết quả hiện từ chế độ fake; chưa dùng làm demo model thật.');
+      } catch (error) {
+        result.className = 'result-box error';
+        result.textContent = error.message || 'Có lỗi khi kết nối. Hãy kiểm tra server và cấu hình model.';
+        metrics.hidden = true;
+      } finally {
+        sendButton.disabled = false;
+        sendLabel.textContent = 'Tạo brief';
+      }
+    });
+
+    loadStatus();
+  </script>
+</body>
+</html>

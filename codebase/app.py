@@ -34,7 +34,8 @@ def main() -> int:
         print("Không nạp được codebase/ — lỗi ở %s: %s: %s" % (_where(e), type(e).__name__, e))
         print("Sửa lỗi rồi chạy lại. Cách nối model: docs/connect-model.md")
         return 1
-    print("Bản chạy thử — gõ đầu vào rồi Enter. Thoát: Ctrl+C (hoặc Enter 2 lần với dòng trống).")
+    print("Pre-Class Bottleneck Brief — hỏi điểm nghẽn theo ngày (vd: Day05 lớp kẹt gì? hoặc so sánh Day05 và Day10).")
+    print("Chỉ dùng số liệu tổng hợp; không hỗ trợ truy vấn cá nhân. Thoát: Ctrl+C hoặc Enter 2 lần.")
     blank = 0
     while True:
         try:

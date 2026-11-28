@@ -1,4 +1,4 @@
-"""Local web demo for Pre-Class Bottleneck Brief.
+"""Local web demo & statistics dashboard for Pre-Class Bottleneck Brief.
 
 Run with ``python run.py`` and open http://127.0.0.1:8765.
 The old terminal interface remains available with ``python codebase/app.py --cli``.
@@ -19,22 +19,118 @@ for _stream in (sys.stdout, sys.stderr, sys.stdin):
 CODEBASE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(CODEBASE)
 HTML_PATH = os.path.join(CODEBASE, "demo.html")
+SIGNALS_PATH = os.path.join(ROOT, "data", "lesson_signals_agg.json")
+RAW_PRECLASS_DIR = os.path.join(ROOT, "data-btc", "preclass")
 sys.path.insert(0, CODEBASE)
+
+# Official BTC price reference (25/11/2026) for live per-query estimate (USD / 1M tokens)
+_MODEL_PRICES = {
+    "gpt-4o-mini": (0.15, 0.60),
+    "gpt-5-nano": (0.05, 0.40),
+    "gpt-5-mini": (0.25, 2.00),
+    "gpt-6.2-sol": (2.00, 10.00),
+    "gemini-3.1-flash-lite": (0.25, 1.50),
+}
+_USD_TO_VND = 25400
 
 
 def _status():
     from ai import API_KEY, MODEL_NAME, MODEL_PROVIDER
 
     ready = MODEL_PROVIDER == "openai" and bool(API_KEY and MODEL_NAME)
+    has_raw = os.path.isdir(RAW_PRECLASS_DIR) and os.path.isfile(os.path.join(RAW_PRECLASS_DIR, "answers.csv"))
     return {
         "provider": MODEL_PROVIDER,
         "model": MODEL_NAME if ready else ("fake" if MODEL_PROVIDER == "fake" else "chưa cấu hình"),
         "ready": ready,
+        "has_raw_data": has_raw,
+        "data_source": "data-btc/preclass → data/lesson_signals_agg.json" if has_raw else "data/lesson_signals_agg.json",
     }
 
 
+def _load_signals_payload():
+    if not os.path.isfile(SIGNALS_PATH):
+        return {"days": {}, "overview": {"total_enrolled": 721, "total_active": 436}}
+    with open(SIGNALS_PATH, encoding="utf-8") as f:
+        raw = json.load(f)
+    days = raw.get("days", {}) if isinstance(raw, dict) else {}
+    total_kc_wrong = 0
+    total_kc_ans = 0
+    days_out = {}
+    for day in sorted(days.keys()):
+        d = days[day]
+        kcs = d.get("kc_stats") or {}
+        kc_list = []
+        w_sum, t_sum = 0, 0
+        for name, v in kcs.items():
+            w, t = int(v.get("wrong", 0)), int(v.get("total", 0))
+            if t > 0:
+                w_sum += w
+                t_sum += t
+                kc_list.append({"name": name, "wrong": w, "total": t, "rate": round(100.0 * w / t, 1)})
+        kc_list.sort(key=lambda x: (-x["rate"], -x["total"], x["name"]))
+        total_kc_wrong += w_sum
+        total_kc_ans += t_sum
+
+        labs = d.get("lab_stats") or {}
+        lab_list = []
+        for lk, lv in labs.items():
+            op = int((lv.get("open") or {}).get("count", 0))
+            sk = int((lv.get("skip") or {}).get("count", 0))
+            inc = int((lv.get("incomplete") or {}).get("count", 0))
+            if op > 0:
+                done = max(0, op - sk - inc)
+                lab_list.append({
+                    "name": lk,
+                    "open": op,
+                    "skip": sk,
+                    "skip_rate": round(100.0 * sk / op, 1),
+                    "incomplete": inc,
+                    "incomplete_rate": round(100.0 * inc / op, 1),
+                    "done": done,
+                    "done_rate": round(100.0 * done / op, 1),
+                    "unfin_rate": round(100.0 * (sk + inc) / op, 1),
+                })
+        lab_list.sort(key=lambda x: (-x["unfin_rate"], -x["open"], x["name"]))
+
+        active = int(d.get("active_learners", 0))
+        low_sample = active < 30 or (len(kc_list) > 0 and all(x["total"] < 10 for x in kc_list[:3]))
+        days_out[day] = {
+            "day": day,
+            "active_learners": active,
+            "low_sample": low_sample,
+            "kc_wrong_total": w_sum,
+            "kc_ans_total": t_sum,
+            "kc_wrong_rate": round(100.0 * w_sum / t_sum, 1) if t_sum else 0.0,
+            "kc_list": kc_list,
+            "lab_list": lab_list,
+            "top_asked_videos": (d.get("top_asked_videos") or [])[:5],
+            "missing_context_count": d.get("missing_context_count", 0),
+        }
+
+    return {
+        "overview": {
+            "total_enrolled": 721,
+            "total_active": 436,
+            "active_rate": 60.5,
+            "total_days": len(days_out),
+            "total_kc_wrong": total_kc_wrong,
+            "total_kc_ans": total_kc_ans,
+            "total_kc_wrong_rate": round(100.0 * total_kc_wrong / total_kc_ans, 1) if total_kc_ans else 0.0,
+            "has_raw_data": _status()["has_raw_data"],
+        },
+        "days": days_out,
+    }
+
+
+def _estimate_cost(model_name, tokens_in, tokens_out):
+    p_in, p_out = _MODEL_PRICES.get(model_name, (0.15, 0.60))
+    usd = (tokens_in * p_in + tokens_out * p_out) / 1_000_000.0
+    return round(usd, 6), round(usd * _USD_TO_VND, 1)
+
+
 class DemoHandler(BaseHTTPRequestHandler):
-    server_version = "PreClassDemo/1.0"
+    server_version = "PreClassDemo/2.0"
 
     def _send(self, status, value, content_type="application/json; charset=utf-8"):
         if isinstance(value, str):
@@ -64,6 +160,12 @@ class DemoHandler(BaseHTTPRequestHandler):
             except Exception as exc:
                 self._send(500, {"error": "%s: %s" % (type(exc).__name__, exc)})
             return
+        if path == "/api/signals":
+            try:
+                self._send(200, _load_signals_payload())
+            except Exception as exc:
+                self._send(500, {"error": "%s: %s" % (type(exc).__name__, exc)})
+            return
         self._send(404, {"error": "Không tìm thấy đường dẫn."})
 
     def do_POST(self):
@@ -86,24 +188,45 @@ class DemoHandler(BaseHTTPRequestHandler):
 
             import tracing
             from agent import answer
+            from tools import parse_and_guard_request
+
+            # Preview parsed days / guardrail status for UI sync
+            parsed = parse_and_guard_request(query)
 
             tracing.begin("web-demo")
             try:
                 result = answer(query)
             except Exception:
-                summary, events = tracing.end()
+                tracing.end()
                 raise
             summary, events = tracing.end()
             state = _status()
+            used_model = ", ".join(summary["models"]) or ("code-guardrail" if summary["model_calls"] == 0 else state["model"])
+            cost_usd, cost_vnd = _estimate_cost(state["model"], summary["tokens_in"], summary["tokens_out"])
+            trace_steps = [
+                {
+                    "kind": ev.get("kind", ev.get("type", "step")),
+                    "name": ev.get("name", ev.get("model", "")),
+                    "latency_ms": round(float(ev.get("latency_s", 0)) * 1000, 1),
+                }
+                for ev in events
+            ]
             self._send(200, {
                 "output": result.get("output", "") if isinstance(result, dict) else str(result),
-                "model": ", ".join(summary["models"]) or state["model"],
+                "model": used_model,
                 "provider": state["provider"],
                 "model_calls": summary["model_calls"],
                 "tool_calls": summary["tool_calls"],
                 "tokens_in": summary["tokens_in"],
                 "tokens_out": summary["tokens_out"],
                 "latency_s": round(sum(event.get("latency_s", 0) for event in events), 2),
+                "cost_usd": cost_usd,
+                "cost_vnd": cost_vnd,
+                "blocked": bool(parsed.get("blocked")),
+                "need_clarify": bool(parsed.get("need_clarify")),
+                "detected_days": parsed.get("lesson_ids", []),
+                "focus": parsed.get("focus", "all"),
+                "trace_steps": trace_steps,
                 "ready": state["ready"],
             })
         except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
@@ -112,7 +235,6 @@ class DemoHandler(BaseHTTPRequestHandler):
             self._send(502, {"error": "%s: %s" % (type(exc).__name__, exc)})
 
     def log_message(self, fmt, *args):
-        # Avoid echoing user input or API errors into the terminal log.
         sys.stdout.write("[web-demo] %s\n" % (fmt % args))
 
 
@@ -166,7 +288,7 @@ def main() -> int:
         return _cli_main()
     try:
         from ai import MODEL_PROVIDER, MODEL_NAME
-        from agent import answer  # noqa: F401 — fail early if the app flow cannot load
+        from agent import answer  # noqa: F401
     except Exception as exc:
         print("Không nạp được codebase/ — %s: %s" % (type(exc).__name__, exc))
         print("Kiểm tra codebase/agent.py và docs/connect-model.md")
@@ -183,7 +305,7 @@ def main() -> int:
     except OSError as exc:
         print("Không mở được giao diện tại %s:%d — %s" % (host, port, exc))
         return 1
-    print("Pre-Class Bottleneck Brief — giao diện demo")
+    print("Pre-Class Bottleneck Brief — Dashboard & AI Demo")
     print("Mở trình duyệt: http://%s:%d" % (host, port))
     print("Model: %s%s · Dừng server: Ctrl+C"
           % (MODEL_PROVIDER, (" / " + MODEL_NAME) if MODEL_NAME else ""))

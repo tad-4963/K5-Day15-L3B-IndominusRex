@@ -29,10 +29,18 @@ _RANK_RE = re.compile(
     re.I,
 )
 _INJECTION_RE = re.compile(
-    r"(?:bo\s+qua|ignore|disregard|override).{0,80}"
-    r"(?:huong\s+dan|instructions?|system\s+prompt|prompt)|"
-    r"(?:reveal|show|print|xuat|tiet\s+lo).{0,40}"
-    r"(?:system\s+prompt|hidden\s+prompt|huong\s+dan\s+he\s+thong)",
+    r"(?:bo\s+qua|ignore|disregard|override).{0,35}"
+    r"(?:huong\s+dan\s+truoc|moi\s+huong\s+dan|cac\s+huong\s+dan|quy\s+tac|luat|instructions?|system\s+prompt)",
+    re.I,
+)
+_PROMPT_LEAK_RE = re.compile(
+    r"(?:reveal|show|print|in\s+nguyen\s+van|in\s+ra|xuat|tiet\s+lo).{0,45}"
+    r"(?:system\s+prompt|hidden\s+prompt|quy\s+tac\s+an|huong\s+dan\s+he\s+thong|huong\s+dan\s+noi\s+bo)",
+    re.I,
+)
+_OUT_OF_SCOPE_ACTION_RE = re.compile(
+    r"(?:tu\s+dong\s+gui\s+tin\s+nhan|gui\s+tin\s+nhan\s+nhac\s+nho|"
+    r"tru\s+diem\s+chuyen\s+can|tru\s+diem\s+hoc\s+vien|cham\s+diem\s+ca\s+nhan)",
     re.I,
 )
 _OUT_OF_SCOPE_TEACHER_RE = re.compile(
@@ -68,6 +76,17 @@ def parse_and_guard_request(query: str) -> dict:
     text = str(query or "")
     normalized = _plain_text(text)
 
+    if _PROMPT_LEAK_RE.search(normalized):
+        return _blocked(
+            "Mình không thể tiết lộ system prompt hay hướng dẫn nội bộ. Mình chỉ hỗ trợ tóm tắt "
+            "điểm nghẽn pre-class cấp lớp (Day01–Day13) và gợi ý 1 hoạt động gỡ vướng 5–10 phút đầu giờ."
+        )
+    if _OUT_OF_SCOPE_ACTION_RE.search(normalized):
+        return _blocked(
+            "Mình không tự động gửi tin nhắn hay trừ điểm chuyên cần cá nhân học viên (dữ liệu đã ẩn danh "
+            "không có danh tính cá nhân, và mọi quyết định tác động ra lớp thuộc về giảng viên). "
+            "Mình chỉ cung cấp bản tóm tắt điểm nghẽn cấp lớp để giảng viên duyệt."
+        )
     if _STUDENT_RE.search(text) or _RANK_RE.search(normalized) or _INJECTION_RE.search(normalized):
         return _blocked(
             "Mình chỉ cung cấp số liệu tổng hợp cấp lớp, không truy xuất hay xếp hạng cá nhân học viên."

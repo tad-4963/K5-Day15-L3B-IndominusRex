@@ -120,5 +120,5 @@ Nhóm dùng trợ lý AI (Antigravity / LLM) để hỗ trợ viết script đà
 | 4 | Bản chạy thử làm trọn lát cắt | `codebase/` · lệnh ở mục "Lệnh" |
 | 5 | Định nghĩa "tốt" + bộ câu thử | `data/DATA_CARD.md` · `eval/` |
 | 6 | Mô phỏng chi phí khi dùng thật | `cost/` |
-| 7 | Slide + demo + video dự phòng | slide trong repo (PDF, PPTX, HTML…) hoặc link slide ở form CP4 · link video: ____ |
+| 7 | Slide + demo + video dự phòng | `demo-slides.pdf` & `demo-slides.html` ở thư mục gốc repo · link video: https://drive.google.com/file/d/113jXG6EhDSyVYMutN68euqyvtJgQvCbn/view?usp=sharing |
 | + | *Bonus:* người dùng thử | `validation/log.md` |
